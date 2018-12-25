@@ -1,0 +1,27 @@
+General:
+	This module contains a simple implementation of a MinHeap and MaxHeap.
+
+	More information about what a heap data structure is:
+	https://en.wikipedia.org/wiki/Heap_(data_structure)
+
+Implementation details:
+	The implementation is quite simple.
+	Both MinHeap and MaxHeap inherit from the class _Heap.
+	Their only difference is how they compare elements, with MinHeap
+	keeping the smallest element on the top of the tree and MaxHeap the
+	largest.
+
+	Both classes provide the same API for accessing their functionality.
+	The most useful are:
+	insert -> inserts a new element (maintaining the heap property)
+	remove -> removes the top element and rearranges the heap
+
+	Method names starting with an underscore '_' are meant to be helper
+	functions and not used publibly.
+
+Notes:
+	You can insert every kind of object, as long as these object can be compared to
+	one another, e.g. object1 > object2 would not raise errors.
+
+	The only element that you cannot put is None.
+
