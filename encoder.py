@@ -1,6 +1,6 @@
-import bisect
 from math import log2
 from io import BytesIO
+from heap import MinHeap
 
 from utils import DataIsNotBytesError, TreeNode, MAGIC_NUMBER
 
@@ -97,20 +97,19 @@ class Compressor:
         Assumes that freq_list is sorted in ascending order.
         Returns the first node of the tree."""
         
-        freq_list = self.freq_list.copy()
-        freq_list.sort()
-        while len(freq_list) > 1:
+        freq_heap = MinHeap.from_iterable(self.freq_list)
+        while len(freq_heap) > 1:
             # get the nodes with the smallest frequency
-            a, b = freq_list[0:2]
-            freq_list = freq_list[2:]
+            a = freq_heap.remove()
+            b = freq_heap.remove()
 
             # make the new node and add it in it's proper position
             new_node = TreeNode(a.freq + b.freq, content = None)
             new_node.lchild = a
             new_node.rchild = b
-            bisect.insort(freq_list, new_node)
+            freq_heap.insert(new_node)
 
-        return freq_list[0]
+        return freq_heap.remove()
 
     def _mk_encode_dict(self):
         def transverse(node, encode_dict, collected):
