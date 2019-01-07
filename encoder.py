@@ -2,26 +2,29 @@ from math import log2
 from io import BytesIO
 from heap import MinHeap
 
-from utils import DataIsNotBytesError, TreeNode, MAGIC_NUMBER
+from utils import DataIsNotBytesError, TreeNode, MAGIC_NUMBER, bytes_to_int, File
 
 class Compressor:
-    def __init__(self, data):
+    def __init__(self, data_file, word_len = 1, use_arg = False):
         """ Initialize the compressor object and set up everything,
         for compressing the file. The data needs to be of type bytes. """
         if type(data) is not bytes:
             raise DataIsNotBytesError("The data supplied to the compressor\
             is excpected to be of type 'bytes' and not {}.".format(type(data)))
+        
+        self.file = File(data_file, word_len, use_arg)
         self.data = data
         self.initialize()
-        self.data_length = len(data)
+        self.data_length = len(self.file) # will be given a value by _mk_freq_dict
         self.compressed_data = None
+        self.word_len = word_len
 
     def initialize(self):
         """ Makes the frequency dict, list and encoding tree."""
         self.freq_dict = self._mk_freq_dict()
         self.freq_list = list()
-        for byte in self.freq_dict:
-            self.freq_list.append(TreeNode(self.freq_dict[byte], content = byte))
+        for word in self.freq_dict:
+            self.freq_list.append(TreeNode(self.freq_dict[word], content = word))
         self.encode_tree = self._mk_encode_tree()
         self.encode_dict = self._mk_encode_dict()
 
@@ -85,11 +88,11 @@ class Compressor:
         the value. """
 
         freq_dict = dict()
-        for byte in self.data:
-            if byte not in freq_dict:
-                freq_dict[byte] = 1
+        for word in self.file:
+            if word not in freq_dict:
+                freq_dict[word] = 1
             else:
-                freq_dict[byte] += 1
+                freq_dict[word] += 1
         return freq_dict
 
     def _mk_encode_tree(self):

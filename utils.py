@@ -66,6 +66,7 @@ class File:
         return self.size
 
     def __iter__(self):
+        self.seek(0)
         return self
     
     def __next__(self):
