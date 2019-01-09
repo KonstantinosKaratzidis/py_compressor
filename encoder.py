@@ -36,19 +36,23 @@ class Compressor:
 
         return cls(data)
 
-    def compress_data(self):
-        self.compressed_data = BytesIO()
+    def compress_data(self, write_obj = None):
+        """write_obj is a writable object"""
+        if write_obj == None:
+            self.compressed_data = BytesIO()
+            write_obj = self.compress_data
 
         temp_byte = int(0) # cannot bit shift a bytes object directly
         temp_bits_written = 0
 
-        for byte in self.data:
-            byte_compressed = self.encode_dict[byte]
-            byte_compressed_length = len(byte_compressed)
-            byte_index = 0
+        for byte in self.file:
+            word_compressed = self.encode_dict[byte]
+            word_compressed_length = len(word_compressed)
+            comp_word_index = 0
 
-            while byte_index < byte_compressed_length:
-                if byte_compressed[byte_index] == "1":
+            for comp_word_index in range(word_compressed_length):
+            #while comp_word_index < word_compressed_length:
+                if word_compressed[comp_word_index] == "1":
                     temp_byte += 1
                 temp_bits_written += 1
 
@@ -58,8 +62,6 @@ class Compressor:
                     temp_bits_written = 0
                 else:
                     temp_byte = temp_byte << 1
-
-                byte_index += 1
 
         if temp_bits_written != 0:
             temp_byte = temp_byte << (8 - temp_bits_written - 1)
