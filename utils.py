@@ -46,11 +46,11 @@ def bytes_to_encode_dict(dict_bytes):
 class File:
     """A class that provides a wrapper for the
     TextIOWrapper. """
-    def __init__(self, fname, word_len = 1, use_arg = False):
-        """use_arg means that fname is considered to be data
+    def __init__(self, fname, word_len = 1, is_open_stream = False):
+        """is_open_stream means that fname is considered to be data
         and is wrapped in a bytes_io object.
         Word_len is how many bytes will be returned when requested."""
-        if use_arg:
+        if is_open_stream:
             if type(fname) != bytes or type(fname) != str:
                 raise TypeError("Expected type to be passed as argument to the File class is either 'bytes' or 'str'")
             if type(fname) is str:
