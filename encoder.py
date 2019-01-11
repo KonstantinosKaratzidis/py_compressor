@@ -127,7 +127,7 @@ class Compressor:
         return meta
 
 if __name__ == "__main__":
-    word_length = 1
+    word_length = 4
     compressor = Compressor("test", word_len= word_length)
     with open("compressed", "wb") as f:
         compressor.compress(f)

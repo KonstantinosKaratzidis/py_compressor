@@ -34,7 +34,7 @@ class CompressedData:
             encode_dict_temp.write(c)
             if c == b"}":
                 break
-        data_start = self.data_stream.tell()
+        data_start = self.data_stream.tell() + len("DICT_END")
 
         encode_dict_temp.seek(0)
         encode_dict = encode_dict_temp.read()
@@ -61,33 +61,39 @@ class Decompressor(CompressedData):
 
         self._mk_encode_tree()
 
-    def uncompress(self):
+    def decompress(self, write_obj):
+        self.data_stream.seek(self.data_index)
 
+        # generates all the bits in a stream one by one
         def bit_generator(data):
-            if type(data) is not bytes:
-                raise DataIsNotBytesError
-            for byte in data:
+            byte = data.read(1)
+            while len(byte) != 0:
+                byte = int.from_bytes(byte, "big", signed = False)
+                #print(byte)
                 mask = 256
                 for i in range(8):
                     mask = mask >> 1
                     bit = (byte & mask) >> (7 - i)
                     yield bit
+                byte = data.read(1)
 
-        uncompressed_data = BytesIO()
         decoded_chars = 0
         tree_start = self.encode_tree
         curr_node = tree_start
-        for bit in bit_generator(self.data):
-            if decoded_chars == self.orig_length:
+        for bit in bit_generator(self.data_stream):
+            if decoded_chars >= self.orig_length:
                 break
             child_attr = "lchild" if bit == 0 else "rchild"
             curr_node = curr_node.__getattribute__(child_attr)
 
             if curr_node.content is not None:
-                uncompressed_data.write(curr_node.content)
+                #print(curr_node.content)
+                decoded_chars += self.word_length
+                if decoded_chars > self.orig_length:
+                    diff = self.orig_length - decoded_chars
+                    curr_node.content = curr_node.content[:-diff]
+                write_obj.write(curr_node.content)
                 curr_node = tree_start
-                decoded_chars += 1
-        self.uncompressed_data = uncompressed_data
 
 
     def _mk_encode_tree(self):
@@ -104,7 +110,3 @@ class Decompressor(CompressedData):
                 cur_node = cur_node.__getattribute__(child_attr)
             cur_node.content = word.to_bytes(self.word_length, "big", signed = False)
 
-if __name__ == "__main__":
-
-    decoder = Decompressor("compressed")
-    print(decoder.get_uncmpressed_data().decode(), end = "")
