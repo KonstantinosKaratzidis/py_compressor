@@ -125,9 +125,3 @@ class Compressor:
                 "data_length"  : self.data_length,
                 "magic_number" : MAGIC_NUMBER}
         return meta
-
-if __name__ == "__main__":
-    word_length = 4
-    compressor = Compressor("test", word_len= word_length)
-    with open("compressed", "wb") as f:
-        compressor.compress(f)

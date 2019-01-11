@@ -14,5 +14,6 @@ What to use for:
 Possible TODOs:
 	* (DONE) Use a MinHeap structure in the construction of the tree, which speeds up the process of finding
 	the two least frequent elements.
-	* When decompressing, not all of the file needs to be in memory at once (use buffers)
-	* The same for compressing.
+	* (DONE) When decompressing, not all of the file needs to be in memory at once (use buffers)
+	* (DONE) The same for compressing.
+	* (DONE) Support for word lengths longer than 1 byte
