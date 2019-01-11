@@ -1,41 +1,51 @@
 from io import BytesIO
 
 from utils import TreeNode, DataIsNotBytesError, MAGIC_NUMBER,\
-                        NotCorrectMagicNumber, bytes_to_encode_dict
+                        NotCorrectMagicNumber, bytes_to_encode_dict, File
 
 class CompressedData:
-    def __init__(self, data):
-        if type(data) is not bytes:
-            raise DataIsNotBytesError
-        if self._check_magic_number(data):
-            data = data[len(MAGIC_NUMBER):]
-        meta = self._get_meta(data)
-
-        self.encode_dict = meta["encode_dict"]
+    def __init__(self, data_file, is_open_stream = False):
+        """Extracts meta data.
+        If is_open_stream is True data_file is treated as a readable
+        binary stream."""
+        data_stream = File(data_file, is_open_stream)
+        
+        magic_number = data_stream.read(len(MAGIC_NUMBER))
+        if magic_number != MAGIC_NUMBER.encode("utf-8"):
+            raise NotCorrectMagicNumber("Compressed file should start with\
+                                        {}".format(MAGIC_NUMBER))
+        
+        meta = self._get_meta(data_file)
         self.orig_length = meta["orig_length"]
+        self.word_length = meta["word_length"]
+        self.encode_dict = meta["encode_dict"]
+        self.data_index = meta["data_index"]
         self.data = meta["data"]
 
-    def _get_meta(self, data):
+    def _get_meta(self, data_stream):
         """Returns a dict containing original data length,
         the encode table and the compressed data"""
         meta = dict()
-        orig_length = int.from_bytes(data[:8], "big")
-        encode_dict_tmp = data[8 + len("DICT_START"): data.index("DICT_END".encode("utf-8"))] 
-        encode_dict = bytes_to_encode_dict(encode_dict_tmp)
-        comp_data = data[data.index("DICT_END".encode("utf-8")) + 8: ]
+        orig_length = int.from_bytes(data_stream.read(8), "big")
+        word_length = int.from_bytes(data_stream.read(8), "big")
+
+        encode_dict_temp = BytesIO()
+        while True:
+            c = data_stream.read(1)
+            encode_dict_temp.write(c)
+            if c == b"}":
+                break
+        data_start = data_stream.tell()
+
+        encode_dict_temp.seek(0)
+        encode_dict = encode_dict_temp.read()
+        encode_dict = encode_dict[encode_dict.index("{") + 1: encode_dict("}")]
 
         meta["orig_length"] = orig_length
+        meta["word_length"] = word_length
         meta["encode_dict"] = encode_dict
-        meta["data"] = comp_data
+        meta["data_index"] = data_start
         return meta
-
-    def _check_magic_number(self, data):
-        """ Checks the magic number and if found to be correct,
-        it removes it from the compressed, so that data does not contain it"""
-        if not data.startswith(MAGIC_NUMBER.encode("utf-8")):
-            raise NotCorrectMagicNumber("Compressed file should start with\
-                                        {}".format(MAGIC_NUMBER))
-        return True
 
 class Decompressor:
     def __init__(self, raw_data):
