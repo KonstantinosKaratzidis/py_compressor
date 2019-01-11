@@ -21,6 +21,7 @@ def arg_parser():
     mode.add_argument("-c", "--compress", action = "store_const", dest = "mode", const = "c", help = "Compress the input file")
     mode.add_argument("-d", "--decompress", action = "store_const", dest = "mode", const = "d", help = "Decompress the input file")
     
+    parser.add_argument("-b", "--bytes", dest = "word_length", type = int, default = 4, choices = [1,2,4,8], help = "The word length in bytes used for compression. Default: 4")
     parser.add_argument("-v", "--verbose", action = "store_true", help = "Be verbose")
     return parser
 
@@ -50,17 +51,11 @@ def main():
         except PermissionError:
             exit("Permission to write to file '{}' denied".format(out_name))
 
-    #read data
-    try:
-        with open(args.file, "br") as f:
-            data = f.read()
-    except FileNotFoundError:
-        exit("File '{}' does not exist.".format(args.file))
-    except PermissionError:
-        exit("Permission for reading file '{}' denied.".format(args.file))
-
-    handler = data_handler(data)
-    handler.write_to_file(output_file)
+    handler = data_handler(args.file, word_len = args.word_length)
+    if args.mode == "c":
+        handler.compress(output_file)
+    else:
+        handler.decompress(output_file)
     output_file.close()
 
     if args.verbose:

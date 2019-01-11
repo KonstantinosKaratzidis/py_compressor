@@ -51,12 +51,8 @@ class File:
         and is wrapped in a bytes_io object.
         Word_len is how many bytes will be returned when requested."""
         if is_open_stream:
-            if type(fname) != bytes or type(fname) != str:
-                raise TypeError("Expected type to be passed as argument to the File class is either 'bytes' or 'str'")
-            if type(fname) is str:
-                fname = fname.encode("utf-8")
-            self.size = len(fname)
-            self.file_base = BytesIO(fname)
+            self.size = None
+            self.file_base = fname
         else:
             self.file_base = open(fname, "br")
             self.size = stat(fname).st_size

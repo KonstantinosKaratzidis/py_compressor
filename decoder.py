@@ -47,7 +47,7 @@ class CompressedData:
         return meta
 
 class Decompressor(CompressedData):
-    def __init__(self, data_file, is_open_stream = False):
+    def __init__(self, data_file, is_open_stream = False, word_len = None):
         """ Initializes the object.
         If is_open_stream is set to True, data_file is treated as a
         readable binary stream."""
