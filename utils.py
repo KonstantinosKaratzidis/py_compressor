@@ -36,7 +36,7 @@ def bytes_to_encode_dict(dict_bytes):
     dict_dict contains the bytes string that is between 'DICT_START'
     and 'DICT_END' in the file."""
     ret = dict()
-    d = dict_bytes[1 : -1].decode("utf-8")
+    d = dict_bytes.decode("utf-8")
     pairs = d.split(",")
     for pair in pairs:
         key, value = pair.strip().split(": ")
