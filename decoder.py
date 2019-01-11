@@ -9,18 +9,17 @@ class CompressedData:
         If is_open_stream is True data_file is treated as a readable
         binary stream."""
         data_stream = File(data_file, is_open_stream)
-        
+
         magic_number = data_stream.read(len(MAGIC_NUMBER))
         if magic_number != MAGIC_NUMBER.encode("utf-8"):
             raise NotCorrectMagicNumber("Compressed file should start with\
                                         {}".format(MAGIC_NUMBER))
-        
+
         meta = self._get_meta(data_file)
         self.orig_length = meta["orig_length"]
         self.word_length = meta["word_length"]
         self.encode_dict = meta["encode_dict"]
         self.data_index = meta["data_index"]
-        self.data = meta["data"]
 
     def _get_meta(self, data_stream):
         """Returns a dict containing original data length,
@@ -47,29 +46,21 @@ class CompressedData:
         meta["data_index"] = data_start
         return meta
 
-class Decompressor:
-    def __init__(self, raw_data):
-        """ Initializes the object. raw_data is the data just like
-        read from the file. It needs to be of type bytes."""
+class Decompressor(CompressedData):
+    def __init__(self, data_file, is_open_stream = False):
+        """ Initializes the object.
+        If is_open_stream is set to True, data_file is treated as a
+        readable binary stream."""
         #the init method of CompressedData does the checks
-        compressed_data = CompressedData(raw_data)
-        self.orig_length = compressed_data.orig_length
-        self.encode_dict = compressed_data.encode_dict
-        self.data = compressed_data.data
-        # starting node, not contain any information
+        #we get orig_length, word_length, encode_dict, data_index
+        super().__init__(data_file, is_open_stream)
+
+        # starting node for encode tree, not contain any information
         self.encode_tree = TreeNode(0)
 
         self._mk_encode_tree()
-        self.uncompressed_data = None
-
-    @classmethod
-    def from_file(cls, fname):
-        with open(fname, "br") as f:
-            return cls(f.read())
 
     def uncompress(self):
-        if self.uncompressed_data is not None:
-            return
 
         def bit_generator(data):
             if type(data) is not bytes:
@@ -90,7 +81,7 @@ class Decompressor:
                 break
             child_attr = "lchild" if bit == 0 else "rchild"
             curr_node = curr_node.__getattribute__(child_attr)
-            
+
             if curr_node.content is not None:
                 uncompressed_data.write(curr_node.content)
                 curr_node = tree_start
@@ -121,6 +112,6 @@ class Decompressor:
         file_object.write(self.get_uncmpressed_data())
 
 if __name__ == "__main__":
-    
+
     decoder = Decompressor.from_file("compressed")
     print(decoder.get_uncmpressed_data().decode(), end = "")
